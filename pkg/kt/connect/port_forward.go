@@ -31,10 +31,6 @@ type PortForwardOptions struct {
 	ReadyChannel  chan struct{}
 }
 
-type portForwarder interface {
-	ForwardPorts(method string, url *url.URL, opts PortForwardOptions) error
-}
-
 // RunPortForward implements all the necessary functionality for port-forward cmd.
 func (o PortForwardOptions) RunPortForward() error {
 	pod, err := o.PodClient.Pods(o.Namespace).Get(context.TODO(), o.PodName, metav1.GetOptions{})
@@ -66,6 +62,10 @@ func (o PortForwardOptions) RunPortForward() error {
 	return o.PortForwarder.ForwardPorts("POST", req.URL(), o)
 }
 
+type portForwarder interface {
+	ForwardPorts(method string, url *url.URL, opts PortForwardOptions) error
+}
+
 type defaultPortForwarder struct {
 	genericclioptions.IOStreams
 }
@@ -83,16 +83,27 @@ func (f *defaultPortForwarder) ForwardPorts(method string, url *url.URL, opts Po
 	return fw.ForwardPorts()
 }
 
-//// PortForward ...
-//func PortForward() {
-//	ioStreams := genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}
-//
-//	portforwader := &defaultPortForwarder{
-//		IOStreams: ioStreams,
-//	}
-//
-//	opts := &PortForwardOptions{
-//		PortForwarder: portforwader,
-//	}
-//	opts.RunPortForward()
-//}
+// SSHForward ...
+func SSHForward(podName string, namespace string, remoteSSH int) error {
+	ioStreams := genericclioptions.IOStreams{In: os.Stdin, Out: os.Stdout, ErrOut: os.Stderr}
+
+	portforwader := &defaultPortForwarder{
+		IOStreams: ioStreams,
+	}
+
+	opts := &PortForwardOptions{
+		Namespace:     namespace,
+		PodName:       podName,
+		PortForwarder: portforwader,
+		Ports: []string{
+			fmt.Sprintf("22:%d", remoteSSH),
+		},
+		PodClient:    nil,
+		Config:       nil,
+		RESTClient:   nil,
+		StopChannel:  make(chan struct{}, 1),
+		ReadyChannel: make(chan struct{}),
+	}
+
+	return opts.RunPortForward()
+}
