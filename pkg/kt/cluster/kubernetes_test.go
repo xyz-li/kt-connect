@@ -1,6 +1,7 @@
 package cluster
 
 import (
+	"github.com/alibaba/kt-connect/pkg/common"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	appv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -122,7 +123,7 @@ func TestKubernetes_ClusterCrids(t *testing.T) {
 			k := &Kubernetes{
 				Clientset: testclient.NewSimpleClientset(tt.objs...),
 			}
-			gotCidrs, err := k.ClusterCrids("default", tt.args.podCIDR)
+			gotCidrs, err := k.ClusterCrids("default", tt.args.podCIDR, common.ClusterScope)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Kubernetes.ClusterCrids() error = %v, wantErr %v", err, tt.wantErr)
 				return

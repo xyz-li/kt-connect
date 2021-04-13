@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/alibaba/kt-connect/pkg/common"
+
 	clusterWatcher "github.com/alibaba/kt-connect/pkg/apiserver/cluster"
 	"github.com/alibaba/kt-connect/pkg/kt/util"
 	"github.com/alibaba/kt-connect/pkg/kt/vars"
@@ -18,7 +20,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// PodMetaAndSpec
+// PodMetaAndSpec ...
 type PodMetaAndSpec struct {
 	Meta  *ResourceMeta
 	Image string
@@ -273,8 +275,13 @@ func (k *Kubernetes) CreateService(name, namespace string, port int, labels map[
 }
 
 // ClusterCrids get cluster cirds
-func (k *Kubernetes) ClusterCrids(namespace string, podCIDR string) (cidrs []string, err error) {
-	serviceList, err := k.Clientset.CoreV1().Services(namespace).List(metav1.ListOptions{})
+func (k *Kubernetes) ClusterCrids(namespace string, podCIDR string, scope string) (cidrs []string, err error) {
+	namespaceScope := namespace
+	if scope == common.ClusterScope {
+		namespaceScope = ""
+	}
+
+	serviceList, err := k.Clientset.CoreV1().Services(namespaceScope).List(metav1.ListOptions{})
 	if err != nil {
 		return
 	}
