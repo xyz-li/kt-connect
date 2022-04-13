@@ -40,6 +40,17 @@ func SetupPortForwardToLocal(podName string, remotePort, localPort int) (chan st
 	return stop, nil
 }
 
+type test struct {
+	http.RoundTripper
+}
+
+func (r *test) RoundTrip(req *http.Request) (res http.Response, err error) {
+	log.Info().Msgf("request: %s, %s, %s", req.Host, req.URL, req.RemoteAddr)
+	res, err = r.RoundTrip(req)
+	log.Info().Msgf("request: %s, %s, %s", req.Host, req.URL, req.RemoteAddr)
+	return res, err
+}
+
 // PortForward call port forward api
 func portForward(podName string, remotePort, localPort int, stop chan struct{}) error {
 	ready := make(chan struct{})
